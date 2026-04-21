@@ -1,0 +1,44 @@
+{
+  "name": "parser-procedural",
+  "version": "1.0.0",
+  "description": "A procedural approach to using parser to process a JSON string.",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "watch": "node --test --watch",
+    "coverage": "c8 -x 'test' node --test",
+    "coverage:ui": "http-server ./coverage -o lcov-report/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TracyGJG/parser-procedural.git"
+  },
+  "keywords": [
+    "JSON",
+    "Parser",
+    "Validator"
+  ],
+  "author": "TGJ Gilmore",
+  "license": "CC0-1.0",
+  "devDependencies": {
+    "c8": "^10.1.3",
+    "http-server": "^14.1.1"
+  },
+  "c8": {
+    "exclude": [
+      "./*.test.*"
+    ],
+    "reporter": [
+      "lcov",
+      "html"
+    ]
+  },
+  "bugs": {
+    "url": "https://github.com/TracyGJG/parser-procedural/issues"
+  },
+  "homepage": "https://github.com/TracyGJG/parser-procedural#readme"
+}

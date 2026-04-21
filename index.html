@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test Harness</title>
+    <link href="JSON-logo.svg" rel="icon" type="image/svg+xml" />
+  </head>
+  <body>
+    <script type="module">
+      // import packageJson from './test/package_.json' with { type: 'json' };
+      // import testcases from './test/testcases.json' with { type: 'json' };
+
+      import jsonParser from './src/json-parser.js';
+
+      const exercise = (inputData) =>
+        runTest(JSON.stringify(inputData, null, 2));
+
+      function runTest(jsonText) {
+        console.log(`\nTestcase: |${jsonText}|`);
+        console.log(jsonParser(jsonText));
+      }
+
+      // exercise(true);
+      // exercise(false);
+      // exercise(null);
+      // runTest('test');
+
+      exercise('');
+      exercise('A');
+      exercise('\t');
+      exercise('\u1234');
+      exercise(' ');
+      exercise({});
+      exercise([]);
+      exercise(['Hello']);
+      // exercise(-0);
+      // exercise(0);
+      // exercise(42);
+      // exercise(-42.13);
+      // exercise(42.13E+5);
+    </script>
+  </body>
+</html>
