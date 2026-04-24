@@ -8,8 +8,7 @@
   </head>
   <body>
     <script type="module">
-      // import packageJson from './test/package_.json' with { type: 'json' };
-      // import testcases from './test/testcases.json' with { type: 'json' };
+      import packageJson from './package.json' with { type: 'json' };
 
       import jsonParser from './src/json-parser.js';
 
@@ -18,27 +17,48 @@
 
       function runTest(jsonText) {
         console.log(`\nTestcase: |${jsonText}|`);
-        console.log(jsonParser(jsonText));
+        const result = jsonParser(jsonText);
+        result.error
+          ? console.error(result.error)
+          : console.log(JSON.stringify(result.results));
       }
 
-      // exercise(true);
-      // exercise(false);
-      // exercise(null);
-      // runTest('test');
+      console.clear();
+      exercise(true);
+      exercise(false);
+      exercise(null);
+      runTest('test');
+      runTest(' true false ');
 
+      runTest('');
+      runTest('"');
       exercise('');
       exercise('A');
       exercise('\t');
       exercise('\u1234');
       exercise(' ');
+      runTest('    "Hello, World!"  ');
+
+      runTest('{');
       exercise({});
-      exercise([]);
+      runTest('{   }');
+      runTest('{ "Hello": "World"  }');
+      runTest('{ "Hello" : 666, "World": 42  }');
+
+      runTest('[');
+      runTest('[   ]');
       exercise(['Hello']);
-      // exercise(-0);
-      // exercise(0);
-      // exercise(42);
-      // exercise(-42.13);
-      // exercise(42.13E+5);
+      exercise(['Hello', ['world']]);
+      exercise([true, false, null]);
+
+      runTest('-0');
+      exercise(0);
+      exercise(42);
+      exercise(-42.13);
+      exercise(42e-56);
+      exercise(42.13e56);
+
+      // exercise(packageJson);
     </script>
   </body>
 </html>

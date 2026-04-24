@@ -72,6 +72,17 @@ export function readToken(state, length = 1) {
 export function captureToken(token) {
   return (state) => {
     token && state.results.push(token);
-    state.index += token.length || 1;
+    state.index += token?.length || 1;
   };
 }
+
+export function consumeTokens(parser = isSpace, token) {
+  return (state) => {
+    while (parser(readToken(state))) captureToken(token)(state);
+  };
+}
+
+export const nextToken = (state, token) => {
+  consumeTokens(isSpace, token)(state);
+  return readToken(state);
+};

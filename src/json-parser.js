@@ -1,10 +1,15 @@
 import { EOI, prepareInput, reportError } from './utils.js';
 
-import { valueModel as valueParser } from './parsers.js';
+import { valueParser } from './parsers.js';
 
 const jsonParser = (jsonText) => {
   const state = prepareInput(jsonText);
-  valueParser(state);
+  if (!valueParser(state)) {
+    state.error = 'Invalid JSON string';
+  }
+  if (state.text.slice(state.index).trim().length) {
+    state.error = 'Unexpected content in JSON string';
+  }
   return state; //.error || state.results?.[0];
 };
 
