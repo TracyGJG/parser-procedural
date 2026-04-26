@@ -86,7 +86,7 @@ function stringParser(state) {
     state.results.length = index + 1;
     return true;
   } else {
-    state.error = 'No end of String';
+    state.error ||= 'No end of String';
   }
   return false;
 }
@@ -104,7 +104,7 @@ function arrayParser(state) {
       }
       token = consumeSpaces(state);
       if (!valueParser(state)) {
-        state.error = 'No value';
+        state.error ||= 'No value';
         return false;
       }
     }
@@ -116,7 +116,7 @@ function arrayParser(state) {
     state.results.length = index + 1;
     return true;
   }
-  state.error = 'No end of Array';
+  state.error ||= 'No end of Array';
   return false;
 }
 
@@ -134,7 +134,7 @@ function objectParser(state) {
       }
       token = consumeSpaces(state);
       if (!keyValueParser(state)) {
-        state.error = 'No key-value';
+        state.error ||= 'No key-value';
         return false;
       }
     }
@@ -147,7 +147,7 @@ function objectParser(state) {
     state.results.length = index + 1;
     return true;
   } else {
-    state.error = 'No end of Object';
+    state.error ||= 'No end of Object';
   }
   return false;
 }
@@ -159,11 +159,11 @@ function keyValueParser(state) {
   if (isObjectKeyValSep(token)) {
     captureToken(':')(state);
   } else {
-    state.error = 'Missing key-value separator';
+    state.error ||= 'Missing key-value separator';
     return false;
   }
   if (!valueParser(state)) {
-    state.error = 'No property value';
+    state.error ||= 'No property value';
     return false;
   }
   return true;
@@ -188,7 +188,7 @@ function integerParser(state) {
   if (token === '-') {
     token = captureToken(token)(state);
     if (!isSingleDigit(token)) {
-      state.error = 'Invalid integer';
+      state.error ||= 'Invalid integer';
       return false;
     }
   }
@@ -203,7 +203,7 @@ function fractionParser(state) {
   if (!isDecimalPoint(token)) return false;
   token = captureToken(token)(state);
   if (!isSingleDigit(token)) {
-    state.error = 'Invalid fraction';
+    state.error ||= 'Invalid fraction';
     return false;
   }
   while (isSingleDigit(token)) {
@@ -220,7 +220,7 @@ function exponentParser(state) {
     token = captureToken(token)(state);
   }
   if (!isSingleDigit(token)) {
-    state.error = 'Invalid exponent';
+    state.error ||= 'Invalid exponent';
     return false;
   }
   while (isSingleDigit(token)) {

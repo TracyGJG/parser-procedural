@@ -7,11 +7,11 @@ const jsonParser = (jsonText) => {
   const result = valueParser(state);
   const remainder = state.text.slice(state.index).trim().length;
 
-  if (!state.error.length && remainder) {
-    state.error = 'Unexpected content in JSON string';
+  if (remainder) {
+    state.error ||= 'Unexpected content in JSON string';
   }
-  if (!state.error.length && (!state.results.length || !result)) {
-    state.error = 'Invalid JSON string';
+  if (!state.results.length || !result) {
+    state.error ||= 'Invalid JSON string';
   }
   return { results: state.results?.[0], error: state.error };
 };
