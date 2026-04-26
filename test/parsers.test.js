@@ -79,6 +79,12 @@ describe('Parsers', () => {
       assert.deepEqual(state, defaultState('[]', 2, [['[', ']']]));
       assert.deepEqual(state.results, [['[', ']']]);
     });
+    test('fails: malformed array', () => {
+      const state = defaultState('[,]');
+      assert.ok(!valueParser(state));
+      assert.deepEqual(state, defaultState('[,]', 1, ['['], 'No end of Array'));
+      assert.deepEqual(state.results, ['[']);
+    });
     test('fails: unterminated array', () => {
       const state = defaultState('[');
       assert.ok(!valueParser(state));
@@ -117,6 +123,24 @@ describe('Parsers', () => {
       assert.ok(valueParser(state));
       assert.deepEqual(state, defaultState('{}', 2, [['{', '}']]));
       assert.deepEqual(state.results, [['{', '}']]);
+    });
+    test('fails: malformed object (property separator)', () => {
+      const state = defaultState('{,}');
+      assert.ok(!valueParser(state));
+      assert.deepEqual(
+        state,
+        defaultState('{,}', 1, ['{'], 'No end of Object'),
+      );
+      assert.deepEqual(state.results, ['{']);
+    });
+    test('fails: malformed object (k-v separator)', () => {
+      const state = defaultState('{:}');
+      assert.ok(!valueParser(state));
+      assert.deepEqual(
+        state,
+        defaultState('{:}', 1, ['{'], 'No end of Object'),
+      );
+      assert.deepEqual(state.results, ['{']);
     });
     test('fails: unterminated object', () => {
       const state = defaultState('{');
