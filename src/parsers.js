@@ -1,4 +1,4 @@
-import { EOI, readToken, captureToken, consumeTokens } from './utils.js';
+import { EOI, readToken, captureToken, consumeSpaces } from './utils.js';
 import {
   isBooleanTrue,
   isBooleanFalse,
@@ -25,18 +25,19 @@ import {
   isWhitespace,
 } from './predicates.js';
 
-const baseValueParser = (predicate, text) => (state) => {
+const baseValueParser = (predicate, token) => (state) => {
+  const text = `${token}`;
   if (!predicate(readToken(state, text.length))) {
     return false;
   }
-  state.results.push(text);
+  state.results.push(token);
   state.index += text.length;
   return true;
 };
 const BASE_VALUES = {
-  t: baseValueParser(isBooleanTrue, 'true'),
-  f: baseValueParser(isBooleanFalse, 'false'),
-  n: baseValueParser(isNullValue, 'null'),
+  t: baseValueParser(isBooleanTrue, true),
+  f: baseValueParser(isBooleanFalse, false),
+  n: baseValueParser(isNullValue, null),
 };
 const isBaseValueInitial = (char) => BASE_VALUES.hasOwnProperty(char);
 
@@ -50,25 +51,20 @@ const MODELS = [
   [isPositiveDigit, numberParser],
 ];
 
-export function valueParser(state) {
-  const index = state.results.length;
-  consumeTokens()(state);
-  const initialChar = readToken(state);
-  if (initialChar) {
-    MODELS.find(([pred, model]) => pred(initialChar))?.[1](state);
-  }
-  return state.index && index !== state.index;
+export default function valueParser(state) {
+  const initialChar = consumeSpaces(state);
+  return (
+    initialChar && MODELS.find(([pred, model]) => pred(initialChar))?.[1](state)
+  );
 }
 
 function baseParser(state) {
-  const initial = readToken(state);
-  return BASE_VALUES[initial](state);
+  return BASE_VALUES[readToken(state)](state);
 }
 
 function stringParser(state) {
   const index = state.results.length;
   captureToken('"')(state);
-
   let token;
   while (!EOI(state)) {
     token = readToken(state, 2);
@@ -97,65 +93,54 @@ function stringParser(state) {
 
 function arrayParser(state) {
   const index = state.results.length;
-  captureToken('[')(state);
-
-  let token;
+  let token = captureToken('[')(state);
   if (valueParser(state)) {
     while (!EOI(state)) {
-      consumeTokens()(state);
-      token = readToken(state);
+      token = consumeSpaces(state);
       if (isArraySeparator(token)) {
         captureToken(',')(state);
       } else {
         break;
       }
-
-      consumeTokens()(state);
-      token = readToken(state);
+      token = consumeSpaces(state);
       if (!valueParser(state)) {
         state.error = 'No value';
-        break;
+        return false;
       }
     }
   }
-  consumeTokens()(state);
-  token = readToken(state);
+  token = consumeSpaces(state);
   if (isArrayEnd(token)) {
-    captureToken(']')(state);
+    captureToken(token)(state);
     state.results[index] = state.results.slice(index, state.results.length);
     state.results.length = index + 1;
     return true;
-  } else {
-    state.error = 'No end of Array';
   }
+  state.error = 'No end of Array';
   return false;
 }
 
 function objectParser(state) {
   const index = state.results.length;
   captureToken('{')(state);
-
   let token;
   if (keyValueParser(state)) {
     while (!EOI(state)) {
-      consumeTokens()(state);
-      token = readToken(state);
+      token = consumeSpaces(state);
       if (isObjectSeparator(token)) {
         captureToken(',')(state);
       } else {
         break;
       }
-
-      consumeTokens()(state);
-      token = readToken(state);
+      token = consumeSpaces(state);
       if (!keyValueParser(state)) {
         state.error = 'No key-value';
-        break;
+        return false;
       }
     }
   }
-  consumeTokens()(state);
-  token = readToken(state);
+  if (state.error.length) return false;
+  token = consumeSpaces(state);
   if (isObjectEnd(token)) {
     captureToken('}')(state);
     state.results[index] = state.results.slice(index, state.results.length);
@@ -167,13 +152,10 @@ function objectParser(state) {
   return false;
 }
 function keyValueParser(state) {
-  consumeTokens()(state);
-  let token = readToken(state);
+  let token = consumeSpaces(state);
   if (!isStringDelim(token)) return false;
-
   stringParser(state);
-  consumeTokens()(state);
-  token = readToken(state);
+  token = consumeSpaces(state);
   if (isObjectKeyValSep(token)) {
     captureToken(':')(state);
   } else {
@@ -189,74 +171,60 @@ function keyValueParser(state) {
 
 function numberParser(state) {
   const index = state.results.length;
-  if (!integerParser(state)) return false;
+  integerParser(state);
   fractionParser(state);
   exponentParser(state);
-
+  if (state.error) return false;
   state.results[index] = +state.results.slice(index).join('');
   state.results.length = index + 1;
   return true;
 }
-
 function integerParser(state) {
   let token = readToken(state);
-
   if (token === '0') {
     captureToken(token)(state);
     return true;
   }
   if (token === '-') {
-    captureToken(token)(state);
-    token = readToken(state);
+    token = captureToken(token)(state);
     if (!isSingleDigit(token)) {
       state.error = 'Invalid integer';
       return false;
     }
   }
   while (isSingleDigit(token)) {
-    captureToken(token)(state);
-    token = readToken(state);
+    token = captureToken(token)(state);
   }
   return true;
 }
 function fractionParser(state) {
+  if (state.error) return false;
   let token = readToken(state);
-
   if (!isDecimalPoint(token)) return false;
-  captureToken(token)(state);
-  token = readToken(state);
-
+  token = captureToken(token)(state);
   if (!isSingleDigit(token)) {
     state.error = 'Invalid fraction';
     return false;
   }
-
   while (isSingleDigit(token)) {
-    captureToken(token)(state);
-    token = readToken(state);
+    token = captureToken(token)(state);
   }
   return true;
 }
 function exponentParser(state) {
+  if (state.error) return false;
   let token = readToken(state);
-
   if (!isExponentSign(token)) return false;
-  captureToken(token)(state);
-  token = readToken(state);
-
+  token = captureToken(token)(state);
   if (isArithmeticSigns(token)) {
-    captureToken(token)(state);
-    token = readToken(state);
+    token = captureToken(token)(state);
   }
-
   if (!isSingleDigit(token)) {
     state.error = 'Invalid exponent';
     return false;
   }
-
   while (isSingleDigit(token)) {
-    captureToken(token)(state);
-    token = readToken(state);
+    token = captureToken(token)(state);
   }
   return true;
 }

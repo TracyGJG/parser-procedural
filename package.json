@@ -10,6 +10,7 @@
   "scripts": {
     "test": "node --test",
     "watch": "node --test --watch",
+    "only": "node --test --test-only",
     "coverage": "c8 -x 'test' node --test",
     "coverage:ui": "http-server ./coverage -o lcov-report/"
   },
